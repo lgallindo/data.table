@@ -52,11 +52,11 @@ cc = function(test=TRUE, clean=FALSE, debug=FALSE, cc_dir=Sys.getenv("CC_DIR")) 
   setwd(file.path(cc_dir,"src"))
   cat(getwd(),"\n")
   if (clean) system("rm *.o *.so")
-  # TODO add -Wextra too
   if (debug) {
-    ret = system("MAKEFLAGS='-j CC=gcc-7 CFLAGS=-std=c99\\ -Og\\ -ggdb\\ -Wall\\ -pedantic' R CMD SHLIB -d -o data.table.so *.c")
+    ret = system("MAKEFLAGS='-j CC=gcc PKG_CFLAGS=-fno-openmp CFLAGS=-std=c99\\ -O0\\ -ggdb\\ -pedantic' R CMD SHLIB -d -o data.table.so *.c")
   } else {
-    ret = system("MAKEFLAGS='-j CC=gcc-7 CFLAGS=-fopenmp\\ -std=c99\\ -O3\\ -pipe\\ -Wall\\ -pedantic' R CMD SHLIB -o data.table.so *.c")
+    ret = system("MAKEFLAGS='-j CC=gcc CFLAGS=-fopenmp\\ -std=c99\\ -O3\\ -pipe\\ -Wall\\ -pedantic' R CMD SHLIB -o data.table.so *.c")
+    # TODO add -Wextra too?
   }
   if (ret) return()
   # clang -Weverything includes -pedantic and issues many more warnings than gcc
@@ -72,8 +72,9 @@ cc = function(test=TRUE, clean=FALSE, debug=FALSE, cc_dir=Sys.getenv("CC_DIR")) 
   for (i in seq_along(xx$.External))
     assign(xx$.External[[i]]$name,  xx$.External[[i]]$address, env=.GlobalEnv)
   sourceDir(paste0(cc_dir,"/R"))
+  assign("testDir", function(x)paste0(cc_dir,"/inst/tests/",x), envir=.GlobalEnv)
   .onLoad()
-  if(test)test.data.table()
+  if (test) test.data.table()
   gc()
   invisible()
 }
